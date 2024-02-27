@@ -140,10 +140,10 @@ int main()
             }
         }
         
-        if(Keyboard::isKeyPressed(Keyboard::A)) dir = 1;
-        if(Keyboard::isKeyPressed(Keyboard::D)) dir = 2;
-        if(Keyboard::isKeyPressed(Keyboard::W)) dir = 3;
-        if(Keyboard::isKeyPressed(Keyboard::S)) dir = 0;
+        if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  dir = 1;
+        if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) dir = 2;
+        if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    dir = 3;
+        if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  dir = 0;
 
         if(timer > delay)
         {
