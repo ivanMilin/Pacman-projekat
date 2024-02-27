@@ -1,11 +1,11 @@
-all: snake-game
+all: pacman-game
 
 main.o: main.cpp
 	g++ -c main.cpp
 	
-snake-game: main.o
-	g++ main.o -o snake-game -lsfml-graphics -lsfml-window -lsfml-system
+pacman-game: main.o
+	g++ main.o -o pacman-game -lsfml-graphics -lsfml-window -lsfml-system
 
 clean:
-	rm -f *.o snake-game
+	rm -f *.o pacman-game
 

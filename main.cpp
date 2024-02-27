@@ -13,7 +13,7 @@ int dir = 0, num=1;
 
 bool paused = false; // Variable to track if the game is paused or not
 
-struct Snake 
+struct Pacman 
 {
     int x,y;
 }s[100];
@@ -49,7 +49,7 @@ const bool mazeMatrix[21][21] = {
 
 void Tick()
 {
-        // Only update the snake if the game is not paused
+        // Only update the pacman if the game is not paused
         if (!paused) 
         { 
             /*for(int i=num; i>0;i--){
@@ -74,8 +74,11 @@ void Tick()
             } while (!mazeMatrix[f.y][f.x]); // Repeat until fruit position is valid
         }
 
-        //for(int i =1; i<num; i++)
-        //    if(s[0].x == s[i].x && s[0].y == s[i].y) num = i;
+
+        if(s[0].x > N-2) s[0].x = 1; 
+        if(s[0].x < 1)   s[0].x = N-2;
+        if(s[0].y > N-1) s[0].y = 1;
+        if(s[0].y < 1)   s[0].y = N-1;
     }
 }
 
@@ -83,16 +86,16 @@ int main()
 {
     srand(time(0));
 
-    RenderWindow window(VideoMode(w,h),"Snake Game");
+    RenderWindow window(VideoMode(w,h),"Pacman Game");
 
     CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
 
-    RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and snake
+    RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and pacman
     RectangleShape line_vertical(Vector2f(1.f, h)); // Create a vertical line
     RectangleShape line_horisontal(Vector2f(w, 1.f)); // Create a horizontal line
     
     Color gridColor = Color(0, 0, 139); // Color for the grid
-    Color snakeColor = Color::Red; // Color for the snake
+    Color pacmanColor = Color::Red; // Color for the pacman
     Color fruitColor = Color::Blue; // Color for the fruit
 
     fruitShape.setFillColor(fruitColor);
@@ -129,7 +132,7 @@ int main()
             if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
             {
                 window.close();
-                printf("Number of fruit : %d",num-1);
+                printf("Number of fruit : %d\n",num-1);
             }
             if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
                 paused = !paused; // Toggle pause state when space is pressed
@@ -174,15 +177,10 @@ int main()
             window.draw(line_horisontal);
         }
 
-        // Draw snake
+        // Draw pacman
         block.setPosition(s[0].x * blockSize, s[0].y * blockSize);
-        block.setFillColor(snakeColor);
+        block.setFillColor(pacmanColor);
         window.draw(block);
-
-        if(s[0].x > N-2) s[0].x = 1; 
-        if(s[0].x < 1)   s[0].x = N-2;
-        if(s[0].y > N-1) s[0].y = 1;
-        if(s[0].y < 1)   s[0].y = N-1;
 
         // Draw fruit
         float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
