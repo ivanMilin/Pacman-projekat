@@ -57,32 +57,39 @@ void Tick()
         if(dir == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
         if(dir == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
 
-        if((s[0].x == f.x) && (s[0].y == f.y))
-        {
-            num++;
-            
-            // Generate random position for the fruit until it is in a valid location
-            do {
-                f.x = rand() % N;
-                f.y = rand() % N;
-            } while (!mazeMatrix[f.y][f.x]); // Repeat until fruit position is valid
-        }
-
-
-        if(s[0].x > N-2) s[0].x = 1; 
-        if(s[0].x < 1)   s[0].x = N-2;
-        if(s[0].y > N-2) s[0].y = 1;
-        if(s[0].y < 1)   s[0].y = N-1;
+        if(s[0].x >= N) s[0].x = 0; 
+        if(s[0].x <= 0) s[0].x = N-1;
+        if(s[0].y >= N) s[0].y = 0;
+        if(s[0].y <= 0) s[0].y = N-1;
     }
+}
+
+void initializeFruits(std::vector<Fruit>& fruits) {
+    for(int i = 0; i < N; ++i) {
+        for(int j = 0; j < M; ++j) {
+            if (mazeMatrix[j][i]) {
+                fruits.push_back({i, j});
+            }
+        }
+    }
+}
+
+void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y) {
+    auto it = std::remove_if(fruits.begin(), fruits.end(), [x, y](const Fruit& fruit) {
+        return fruit.x == x && fruit.y == y;
+    });
+    fruits.erase(it, fruits.end());
 }
 
 int main()
 {
     srand(time(0));
+    std::vector<Fruit> fruits;
+    initializeFruits(fruits);
 
-    RenderWindow window(VideoMode(w,h+blockSize*2),"Pacman Game");
+    RenderWindow window(VideoMode(w+2*blockSize,h+2*blockSize),"Pacman Game");
 
-    CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
+    CircleShape fruitShape(blockSize / 4.5); // Create a circle shape for the fruit
 
     Texture pacmanTexture;    
     if (!pacmanTexture.loadFromFile("images/pacman.png")) {
@@ -96,7 +103,7 @@ int main()
     RectangleShape line_horisontal(Vector2f(w, 1.f)); // Create a horizontal line
     
     Color gridColor = Color(0, 0, 139); // Color for the grid
-    Color fruitColor = Color::Blue; // Color for the fruit
+    Color fruitColor = Color::White; // Color for the fruit
 
     fruitShape.setFillColor(fruitColor);
     line_vertical.setFillColor(Color::Black);
@@ -148,6 +155,16 @@ int main()
         {
             timer = 0;
             Tick();
+
+            // Check if pacman meets fruit
+            for (const auto& fruit : fruits) 
+            {
+                if (s[0].x == fruit.x && s[0].y == fruit.y) 
+                {
+                    removeEatenFruit(fruits, fruit.x, fruit.y);
+                    num++; // Increment fruit count
+                }
+            }
         }
 
         window.clear();
@@ -155,7 +172,7 @@ int main()
         // Draw grid
         for(int i = 0; i < N; i++) {
             for(int j = 0; j < M; j++) {
-                block.setPosition(i * blockSize, j * blockSize);
+                block.setPosition((i + 1) * blockSize, (j + 1) * blockSize); // Adjust position
                 if (mazeMatrix[j][i]) {
                     block.setFillColor(Color::Black); // Set color to black if matrix value is one
                 } else {
@@ -167,25 +184,28 @@ int main()
 
         // Draw vertical lines
         for(int i = 1; i < N; i++) {
-            line_vertical.setPosition(i * blockSize, 0);
+            line_vertical.setPosition((i + 1) * blockSize, blockSize); // Adjust position
             window.draw(line_vertical);
         }
 
         // Draw horizontal lines
         for(int j = 1; j < M; j++) {
-            line_horisontal.setPosition(0, j * blockSize);
+            line_horisontal.setPosition(blockSize, (j + 1) * blockSize); // Adjust position
             window.draw(line_horisontal);
         }
 
         // Draw pacman
-        pacmanSprite.setPosition(s[0].x * blockSize, s[0].y * blockSize);
+        pacmanSprite.setPosition((s[0].x + 1) * blockSize, (s[0].y + 1) * blockSize); // Adjust position
         window.draw(pacmanSprite);
 
-        // Draw fruit
-        float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
-        float fruitPosY = f.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
-        fruitShape.setPosition(fruitPosX, fruitPosY);
-        window.draw(fruitShape);
+        // Draw remaining fruits
+        for (const Fruit& fruit : fruits)  
+        {
+            float fruitPosX = (fruit.x + 1) * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2; // Adjust position
+            float fruitPosY = (fruit.y + 1) * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2; // Adjust position
+            fruitShape.setPosition(fruitPosX, fruitPosY);
+            window.draw(fruitShape);
+        }
 
         if (paused)
         {
