@@ -1,0 +1,186 @@
+#include <SFML/Graphics.hpp>
+#include <time.h>
+
+using namespace sf;
+
+int N = 21, M = 21;
+
+int blockSize = 32; // Adjust the size of each block
+int w = blockSize * N;
+int h = blockSize * M;
+
+int dir = 0, num=1;
+
+bool paused = false; // Variable to track if the game is paused or not
+
+struct Snake 
+{
+    int x,y;
+}s[100];
+
+struct Fruit
+{
+    int x,y;
+}f;
+
+const bool mazeMatrix[21][21] = {
+        {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
+        {0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0},
+        {0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0},
+        {0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0},
+        {0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0},
+        {0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0},
+        {0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
+        {0,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,1,1,0},
+        {0,1,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0},
+        {0,1,0,1,1,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0},
+        {0,1,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0},
+        {1,1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,1},
+        {0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,0,0,0,0,0,0},
+        {0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0},
+        {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0},
+        {0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,0},
+        {0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0},
+        {0,1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,0,1,0},
+        {0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0},
+        {1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1},
+        {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0}
+        };
+
+void Tick()
+{
+        // Only update the snake if the game is not paused
+        if (!paused) 
+        { 
+            /*for(int i=num; i>0;i--){
+                s[i].x = s[i-1].x;
+                s[i].y = s[i-1].y;
+            }
+            */
+        
+        if(dir == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
+        if(dir == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
+        if(dir == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
+        if(dir == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
+
+        if((s[0].x == f.x) && (s[0].y == f.y))
+        {
+            num++;
+            
+            // Generate random position for the fruit until it is in a valid location
+            do {
+                f.x = rand() % N;
+                f.y = rand() % M;
+            } while (!mazeMatrix[f.y][f.x]); // Repeat until fruit position is valid
+        }
+
+        //for(int i =1; i<num; i++)
+        //    if(s[0].x == s[i].x && s[0].y == s[i].y) num = i;
+    }
+}
+
+int main()
+{
+    srand(time(0));
+
+    RenderWindow window(VideoMode(w,h),"Snake Game");
+
+    CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
+
+    RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and snake
+    RectangleShape line_vertical(Vector2f(1.f, h)); // Create a vertical line
+    RectangleShape line_horisontal(Vector2f(w, 1.f)); // Create a horizontal line
+    
+    Color gridColor = Color(0, 0, 139); // Color for the grid
+    Color snakeColor = Color::Red; // Color for the snake
+    Color fruitColor = Color::Blue; // Color for the fruit
+
+    fruitShape.setFillColor(fruitColor);
+    line_vertical.setFillColor(Color::Black);
+    line_horisontal.setFillColor(Color::Black);
+
+    Clock clock;
+    float timer = 0;
+    float delay = 0.1;
+    f.x = 11;
+    f.y = 11;
+    s[0].x = 1;
+    s[0].y = 1;
+
+    while(window.isOpen())
+    {
+        float time = clock.getElapsedTime().asSeconds();
+        clock.restart();
+        timer += time;
+        Event e;
+        
+        while(window.pollEvent(e))
+        {
+            if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
+            {
+                window.close();
+                printf("Number of fruit : %d",num-1);
+            }
+            if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
+                paused = !paused; // Toggle pause state when space is pressed
+            }
+        }
+        
+        if(Keyboard::isKeyPressed(Keyboard::A)) dir = 1;
+        if(Keyboard::isKeyPressed(Keyboard::D)) dir = 2;
+        if(Keyboard::isKeyPressed(Keyboard::W)) dir = 3;
+        if(Keyboard::isKeyPressed(Keyboard::S)) dir = 0;
+
+        if(timer > delay)
+        {
+            timer = 0;
+            Tick();
+        }
+
+        window.clear();
+
+        // Draw grid
+        for(int i = 0; i < N; i++) {
+            for(int j = 0; j < M; j++) {
+                block.setPosition(i * blockSize, j * blockSize);
+                if (mazeMatrix[j][i]) {
+                    block.setFillColor(Color::Black); // Set color to black if matrix value is one
+                } else {
+                    block.setFillColor(Color(0, 0, 139)); // Set color to dark blue if matrix value is zero
+                }
+                window.draw(block);
+            }
+        }
+
+        // Draw vertical lines
+        for(int i = 1; i < N; i++) {
+            line_vertical.setPosition(i * blockSize, 0);
+            window.draw(line_vertical);
+        }
+
+        // Draw horizontal lines
+        for(int j = 1; j < M; j++) {
+            line_horisontal.setPosition(0, j * blockSize);
+            window.draw(line_horisontal);
+        }
+
+        // Draw snake
+        block.setPosition(s[0].x * blockSize, s[0].y * blockSize);
+        block.setFillColor(snakeColor);
+        window.draw(block);
+
+        if(s[0].x > N-1) s[0].x = 0; 
+        if(s[0].x < 1)   s[0].x = N;
+        if(s[0].y > M-1) s[0].y = 0;
+        if(s[0].y < 1)   s[0].y = M;
+
+        // Draw fruit
+        float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
+        float fruitPosY = f.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
+        fruitShape.setPosition(fruitPosX, fruitPosY);
+        window.draw(fruitShape);
+
+        window.display();
+    }
+    return 0;
+}
