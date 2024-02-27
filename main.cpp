@@ -80,7 +80,7 @@ int main()
 {
     srand(time(0));
 
-    RenderWindow window(VideoMode(w,h),"Pacman Game");
+    RenderWindow window(VideoMode(w,h+blockSize*2),"Pacman Game");
 
     CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
 
@@ -96,7 +96,6 @@ int main()
     RectangleShape line_horisontal(Vector2f(w, 1.f)); // Create a horizontal line
     
     Color gridColor = Color(0, 0, 139); // Color for the grid
-    Color pacmanColor = Color::Yellow; // Color for the pacman
     Color fruitColor = Color::Blue; // Color for the fruit
 
     fruitShape.setFillColor(fruitColor);
