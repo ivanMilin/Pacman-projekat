@@ -7,7 +7,7 @@ int N = 21, M = 21;
 
 int blockSize = 32; // Adjust the size of each block
 int w = blockSize * N;
-int h = blockSize * M;
+int h = blockSize * N;
 
 int dir = 0, num=1;
 
@@ -70,7 +70,7 @@ void Tick()
             // Generate random position for the fruit until it is in a valid location
             do {
                 f.x = rand() % N;
-                f.y = rand() % M;
+                f.y = rand() % N;
             } while (!mazeMatrix[f.y][f.x]); // Repeat until fruit position is valid
         }
 
@@ -98,6 +98,16 @@ int main()
     fruitShape.setFillColor(fruitColor);
     line_vertical.setFillColor(Color::Black);
     line_horisontal.setFillColor(Color::Black);
+
+    Font font;
+    if (!font.loadFromFile("font/Arial.ttf")) {
+        return EXIT_FAILURE;
+    }
+
+    Text pausedText("Paused", font, 50);
+    pausedText.setFillColor(Color::White);
+    pausedText.setStyle(Text::Bold);
+    pausedText.setPosition(w / 2 - pausedText.getLocalBounds().width / 2, h / 2 - pausedText.getLocalBounds().height / 2);
 
     Clock clock;
     float timer = 0;
@@ -169,16 +179,21 @@ int main()
         block.setFillColor(snakeColor);
         window.draw(block);
 
-        if(s[0].x > N-1) s[0].x = 0; 
-        if(s[0].x < 1)   s[0].x = N;
-        if(s[0].y > M-1) s[0].y = 0;
-        if(s[0].y < 1)   s[0].y = M;
+        if(s[0].x > N-2) s[0].x = 1; 
+        if(s[0].x < 1)   s[0].x = N-2;
+        if(s[0].y > N-1) s[0].y = 1;
+        if(s[0].y < 1)   s[0].y = N-1;
 
         // Draw fruit
         float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
         float fruitPosY = f.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
         fruitShape.setPosition(fruitPosX, fruitPosY);
         window.draw(fruitShape);
+
+        if (paused)
+        {
+            window.draw(pausedText);
+        }
 
         window.display();
     }
