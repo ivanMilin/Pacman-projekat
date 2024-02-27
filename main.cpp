@@ -50,14 +50,8 @@ const bool mazeMatrix[21][21] = {
 void Tick()
 {
         // Only update the pacman if the game is not paused
-        if (!paused) 
-        { 
-            /*for(int i=num; i>0;i--){
-                s[i].x = s[i-1].x;
-                s[i].y = s[i-1].y;
-            }
-            */
-        
+    if (!paused) 
+    { 
         if(dir == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
         if(dir == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
         if(dir == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
@@ -77,7 +71,7 @@ void Tick()
 
         if(s[0].x > N-2) s[0].x = 1; 
         if(s[0].x < 1)   s[0].x = N-2;
-        if(s[0].y > N-1) s[0].y = 1;
+        if(s[0].y > N-2) s[0].y = 1;
         if(s[0].y < 1)   s[0].y = N-1;
     }
 }
@@ -89,16 +83,18 @@ int main()
     RenderWindow window(VideoMode(w,h),"Pacman Game");
 
     CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
+    CircleShape pacman(blockSize / 2); // Create a circle shape for the fruit
 
     RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and pacman
     RectangleShape line_vertical(Vector2f(1.f, h)); // Create a vertical line
     RectangleShape line_horisontal(Vector2f(w, 1.f)); // Create a horizontal line
     
     Color gridColor = Color(0, 0, 139); // Color for the grid
-    Color pacmanColor = Color::Red; // Color for the pacman
+    Color pacmanColor = Color::Yellow; // Color for the pacman
     Color fruitColor = Color::Blue; // Color for the fruit
 
     fruitShape.setFillColor(fruitColor);
+    pacman.setFillColor(fruitColor);
     line_vertical.setFillColor(Color::Black);
     line_horisontal.setFillColor(Color::Black);
 
@@ -178,9 +174,9 @@ int main()
         }
 
         // Draw pacman
-        block.setPosition(s[0].x * blockSize, s[0].y * blockSize);
-        block.setFillColor(pacmanColor);
-        window.draw(block);
+        pacman.setPosition(s[0].x * blockSize, s[0].y * blockSize);
+        pacman.setFillColor(pacmanColor);
+        window.draw(pacman);
 
         // Draw fruit
         float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
