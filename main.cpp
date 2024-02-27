@@ -83,7 +83,13 @@ int main()
     RenderWindow window(VideoMode(w,h),"Pacman Game");
 
     CircleShape fruitShape(blockSize / 2); // Create a circle shape for the fruit
-    CircleShape pacman(blockSize / 2); // Create a circle shape for the fruit
+
+    Texture pacmanTexture;    
+    if (!pacmanTexture.loadFromFile("images/pacman.png")) {
+        return EXIT_FAILURE;
+    }
+
+    Sprite pacmanSprite(pacmanTexture);
 
     RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and pacman
     RectangleShape line_vertical(Vector2f(1.f, h)); // Create a vertical line
@@ -94,7 +100,6 @@ int main()
     Color fruitColor = Color::Blue; // Color for the fruit
 
     fruitShape.setFillColor(fruitColor);
-    pacman.setFillColor(fruitColor);
     line_vertical.setFillColor(Color::Black);
     line_horisontal.setFillColor(Color::Black);
 
@@ -174,9 +179,8 @@ int main()
         }
 
         // Draw pacman
-        pacman.setPosition(s[0].x * blockSize, s[0].y * blockSize);
-        pacman.setFillColor(pacmanColor);
-        window.draw(pacman);
+        pacmanSprite.setPosition(s[0].x * blockSize, s[0].y * blockSize);
+        window.draw(pacmanSprite);
 
         // Draw fruit
         float fruitPosX = f.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
