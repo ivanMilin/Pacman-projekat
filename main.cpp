@@ -9,7 +9,9 @@ int blockSize = 32; // Adjust the size of each block
 int w = blockSize * N;
 int h = blockSize * N;
 
-int dir = 0, num=1;
+int dir = 0;
+int num = 1;
+int number_of_fruits = 0;
 
 bool paused = false; // Variable to track if the game is paused or not
 
@@ -47,6 +49,30 @@ const bool mazeMatrix[21][21] = {
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0}
         };
 
+const bool foodMatrix[21][21] = {
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+        {0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0},
+        {0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,1,0},
+        {0,1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,1,1,1,1,0},
+        {0,1,0,0,0,0,0,1,0,1,0,0,0,1,0,1,0,1,0,0,0},
+        {0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,1,1,0},
+        {0,0,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
+        {0,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,1,1,0},
+        {0,1,0,1,0,1,0,1,0,0,0,0,0,1,0,1,0,0,0,0,0},
+        {0,1,0,1,1,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,0},
+        {0,1,0,0,0,0,0,0,0,1,0,1,0,1,0,1,0,0,0,1,0},
+        {0,1,1,1,1,1,0,1,1,1,0,1,0,1,0,1,1,1,1,1,0},
+        {0,0,0,0,0,1,0,1,0,1,0,1,0,1,0,0,0,0,0,0,0},
+        {0,1,1,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,0},
+        {0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0},
+        {0,1,1,1,0,1,0,1,1,1,1,1,1,1,1,1,0,1,1,1,0},
+        {0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,1,0,1,0,1,0},
+        {0,1,0,1,0,1,1,1,1,1,1,1,0,1,1,1,0,1,0,1,0},
+        {0,1,0,1,0,0,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0},
+        {0,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0},
+        {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+        };
+
 void Tick()
 {
         // Only update the pacman if the game is not paused
@@ -57,21 +83,22 @@ void Tick()
         if(dir == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
         if(dir == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
 
-        if(s[0].x >= N) s[0].x = 0; 
-        if(s[0].x <= 0) s[0].x = N-1;
-        if(s[0].y >= N) s[0].y = 0;
-        if(s[0].y <= 0) s[0].y = N-1;
+        if(s[0].x >= N-1) s[0].x = 1; 
+        if(s[0].x < 1)    s[0].x = N-1;
+        if(s[0].y >= N-1) s[0].y = 1;
+        if(s[0].y < 1)   s[0].y = N-1;
     }
 }
 
 void initializeFruits(std::vector<Fruit>& fruits) {
     for(int i = 0; i < N; ++i) {
         for(int j = 0; j < M; ++j) {
-            if (mazeMatrix[j][i]) {
+            if (foodMatrix[j][i]) {
                 fruits.push_back({i, j});
             }
         }
     }
+
 }
 
 void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y) {
@@ -86,8 +113,10 @@ int main()
     srand(time(0));
     std::vector<Fruit> fruits;
     initializeFruits(fruits);
+    number_of_fruits = fruits.size();
+    printf("Total number of truits : %d\n", number_of_fruits);
 
-    RenderWindow window(VideoMode(w+2*blockSize,h+2*blockSize),"Pacman Game");
+    RenderWindow window(VideoMode(w,h),"Pacman Game");
 
     CircleShape fruitShape(blockSize / 4.5); // Create a circle shape for the fruit
 
@@ -172,7 +201,7 @@ int main()
         // Draw grid
         for(int i = 0; i < N; i++) {
             for(int j = 0; j < M; j++) {
-                block.setPosition((i + 1) * blockSize, (j + 1) * blockSize); // Adjust position
+                block.setPosition(i * blockSize, j * blockSize);
                 if (mazeMatrix[j][i]) {
                     block.setFillColor(Color::Black); // Set color to black if matrix value is one
                 } else {
@@ -184,25 +213,25 @@ int main()
 
         // Draw vertical lines
         for(int i = 1; i < N; i++) {
-            line_vertical.setPosition((i + 1) * blockSize, blockSize); // Adjust position
+            line_vertical.setPosition(i * blockSize, 0);
             window.draw(line_vertical);
         }
 
         // Draw horizontal lines
         for(int j = 1; j < M; j++) {
-            line_horisontal.setPosition(blockSize, (j + 1) * blockSize); // Adjust position
+            line_horisontal.setPosition(0, j * blockSize);
             window.draw(line_horisontal);
         }
 
         // Draw pacman
-        pacmanSprite.setPosition((s[0].x + 1) * blockSize, (s[0].y + 1) * blockSize); // Adjust position
+        pacmanSprite.setPosition(s[0].x * blockSize, s[0].y * blockSize);
         window.draw(pacmanSprite);
 
         // Draw remaining fruits
         for (const Fruit& fruit : fruits)  
         {
-            float fruitPosX = (fruit.x + 1) * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2; // Adjust position
-            float fruitPosY = (fruit.y + 1) * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2; // Adjust position
+            float fruitPosX = fruit.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
+            float fruitPosY = fruit.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
             fruitShape.setPosition(fruitPosX, fruitPosY);
             window.draw(fruitShape);
         }
