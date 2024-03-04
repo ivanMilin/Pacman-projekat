@@ -113,15 +113,6 @@ void moveGhost(Ghost& ghost) {
     if(ghost.y < 1)    ghost.y = N-1;
 }
 
-void Tick() {
-    // Only update the pacman and ghost if the game is not paused
-    if (!paused) { 
-        movePacman();
-        moveGhost(ghost1);
-        moveGhost(ghost2);
-    }
-}
-
 void initializeFruits(std::vector<Fruit>& fruits) 
 {
     copyMatrixAndModify();
@@ -133,7 +124,6 @@ void initializeFruits(std::vector<Fruit>& fruits)
             }
         }
     }
-
 }
 
 void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y) 
@@ -203,7 +193,7 @@ int main()
     }
 
     //This text is meant for printing text when 'space' button is pressed
-    Text pausedText("Paused", font, 64);
+    Text pausedText("Paused", font, 100);
     pausedText.setFillColor(Color::Yellow);
     pausedText.setStyle(Text::Bold);
     pausedText.setPosition(w / 2 - pausedText.getLocalBounds().width / 2, h / 2 - pausedText.getLocalBounds().height / 2);
@@ -216,13 +206,13 @@ int main()
     currentScoreText.setPosition(w / 2 - pausedText.getLocalBounds().width / 2 + blockSize, h + blockSize);
 
     //This text is meant for printing text when game is over to tell you how to exit window
-    Text instructionToExitGame("-> Press Esc to exit <-", font, 48);
+    Text instructionToExitGame("=> Press Esc to exit <=", font, 48);
     instructionToExitGame.setFillColor(Color::Cyan);
     instructionToExitGame.setStyle(Text::Bold);
     instructionToExitGame.setPosition(w / 2 - instructionToExitGame.getLocalBounds().width / 2, h);
 
     Clock clock;
-    float timer = 0, delay = 0.1;
+    float timer = 0, delay = 0.15;
 
     pacman.x = 1;
     pacman.y = 1;
@@ -244,19 +234,22 @@ int main()
         clock.restart();
         timer += time;
         
-        if(howManyFruitsPacmanHasEaten == 20)
-        //if(howManyFruitsPacmanHasEaten == numberOfFruitsOnMap)
+        if(howManyFruitsPacmanHasEaten == 20) 
+        // In order to redunce time for testing game uncomment if-statement above and comment if-statement below
+        // if(howManyFruitsPacmanHasEaten == numberOfFruitsOnMap)
         {
+            //This function displays image and text when pacman eats ALL FOOD on map
             displayImageAndText(window, you_wonSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
         else if(pacman.x == ghost1.x && pacman.y == ghost1.y || pacman.x == ghost2.x && pacman.y == ghost2.y)
         {
+            //This function displays image and text when pacman is eaten by a ghost
             displayImageAndText(window, game_overSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
         
         else
         {
-           while(window.pollEvent(e))
+            while(window.pollEvent(e))
             {
                 if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
                 {
@@ -276,7 +269,12 @@ int main()
             if(timer > delay)
             {
                 timer = 0;
-                Tick();
+
+                if (!paused) { 
+                    movePacman();
+                    moveGhost(ghost1);
+                    moveGhost(ghost2);
+                }
 
                 // Check if pacman meets fruit
                 for (const auto& fruit : fruits) 
@@ -295,7 +293,8 @@ int main()
             for(int i = 0; i < N; i++) {
                 for(int j = 0; j < N; j++) {
                     block.setPosition(i * blockSize, j * blockSize);
-                    if (mazeMatrix[j][i]) {
+                    if (mazeMatrix[j][i]) 
+                    {
                         block.setFillColor(Color::Black); // Set color to black if matrix value is one
                     } else {
                         block.setFillColor(Color(0, 0, 139)); // Set color to dark blue if matrix value is zero
@@ -304,15 +303,11 @@ int main()
                 }
             }
 
-            // Draw vertical lines
+            // Draw vertical and horisontal lines
             for(int i = 1; i < N; i++) {
                 line_vertical.setPosition(i * blockSize, 0);
+                line_horisontal.setPosition(0, i * blockSize);
                 window.draw(line_vertical);
-            }
-
-            // Draw horizontal lines
-            for(int j = 1; j < N; j++) {
-                line_horisontal.setPosition(0, j * blockSize);
                 window.draw(line_horisontal);
             }
 
@@ -320,10 +315,11 @@ int main()
             pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
             window.draw(pacmanSprite);
 
-            // Draw ghost
+            // Draw red ghost
             ghost_redSprite.setPosition(ghost1.x * blockSize, ghost1.y * blockSize);
             window.draw(ghost_redSprite);
 
+            // Draw blue ghost
             ghost_blueSprite.setPosition(ghost2.x * blockSize, ghost2.y * blockSize);
             window.draw(ghost_blueSprite);
 
