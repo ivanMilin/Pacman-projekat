@@ -9,8 +9,9 @@ int w = blockSize * N, h = blockSize * N; // Adjust the size of each block
 
 int direction = 0, howManyFruitsPacmanHasEaten = 0;
 
-bool foodMatrix[21][21], allowMove = false, paused = false;
+bool allowMove = false, paused = false; 
 
+bool foodMatrix[21][21]; 
 const bool mazeMatrix[21][21] = {
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
         {0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0},
@@ -38,12 +39,12 @@ const bool mazeMatrix[21][21] = {
 struct Pacman 
 {
     int x,y;
-}s[100];
+}pacman;
 
-struct Fruit
+typedef struct
 {
     int x,y;
-}f;
+} Fruit;
 
 struct Ghost
 {
@@ -75,15 +76,15 @@ void copyMatrixAndModify()
 
 void movePacman() {
     if(allowMove){
-        if(direction == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
-        if(direction == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
-        if(direction == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
-        if(direction == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
+        if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
+        if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
+        if(direction == 2 && mazeMatrix[pacman.y][pacman.x + 1]) pacman.x += 1;
+        if(direction == 3 && mazeMatrix[pacman.y - 1][pacman.x]) pacman.y -= 1;
 
-        if(s[0].x >= N-1) s[0].x = 1; 
-        if(s[0].x < 1)    s[0].x = N-1;
-        if(s[0].y >= N-1) s[0].y = 1;
-        if(s[0].y < 1)    s[0].y = N-1;
+        if(pacman.x >= N-1) pacman.x = 1; 
+        if(pacman.x < 1)    pacman.x = N-1;
+        if(pacman.y >= N-1) pacman.y = 1;
+        if(pacman.y < 1)    pacman.y = N-1;
     }
 }
 
@@ -223,11 +224,8 @@ int main()
     Clock clock;
     float timer = 0, delay = 0.1;
 
-    f.x = 11;
-    f.y = 11;
-
-    s[0].x = 1;
-    s[0].y = 1;
+    pacman.x = 1;
+    pacman.y = 1;
     
     ghost1.x = 13;
     ghost1.y = 1;
@@ -251,7 +249,7 @@ int main()
         {
             displayImageAndText(window, you_wonSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
-        else if(s[0].x == ghost1.x && s[0].y == ghost1.y || s[0].x == ghost2.x && s[0].y == ghost2.y)
+        else if(pacman.x == ghost1.x && pacman.y == ghost1.y || pacman.x == ghost2.x && pacman.y == ghost2.y)
         {
             displayImageAndText(window, game_overSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
@@ -283,7 +281,7 @@ int main()
                 // Check if pacman meets fruit
                 for (const auto& fruit : fruits) 
                 {
-                    if (s[0].x == fruit.x && s[0].y == fruit.y) 
+                    if (pacman.x == fruit.x && pacman.y == fruit.y) 
                     {
                         removeEatenFruit(fruits, fruit.x, fruit.y);
                         howManyFruitsPacmanHasEaten++; // Increment fruit count
@@ -319,7 +317,7 @@ int main()
             }
 
             // Draw pacman
-            pacmanSprite.setPosition(s[0].x * blockSize, s[0].y * blockSize);
+            pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
             window.draw(pacmanSprite);
 
             // Draw ghost
