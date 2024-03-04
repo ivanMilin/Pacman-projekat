@@ -144,6 +144,23 @@ void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y)
     fruits.erase(it, fruits.end());
 }
 
+void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame, int score) {
+    window.clear();
+    game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
+                                 window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
+    window.draw(game_overSprite);
+    window.draw(instructionToExitGame);
+
+    Event e;
+    while (window.pollEvent(e)) {
+        if (e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape)) {
+            window.close();
+            printf("Number of eaten fruit : %d\n", score);
+        }
+    }
+    window.display();
+}
+
 int main()
 {
     RenderWindow window(VideoMode(w,h+2*blockSize),"Pacman Game");
@@ -205,8 +222,8 @@ int main()
     instructionToExitGame.setPosition(w / 2 - instructionToExitGame.getLocalBounds().width / 2, h);
 
     Clock clock;
-    float timer = 0;
-    float delay = 0.1;
+    float timer = 0, delay = 0.1;
+
     f.x = 11;
     f.y = 11;
 
@@ -230,34 +247,14 @@ int main()
         clock.restart();
         timer += time;
         
-        //if(howManyFruitsPacmanHasEaten == number_of_fruits_on_map)
         if(howManyFruitsPacmanHasEaten == 20)
+        //if(howManyFruitsPacmanHasEaten == numberOfFruitsOnMap)
         {
-            window.clear();
-            you_wonSprite.setPosition(w / 2 - you_wonSprite.getLocalBounds().width / 2, h / 2 - you_wonSprite.getLocalBounds().height / 2);
-            window.draw(you_wonSprite);
-            window.draw(instructionToExitGame);
-
-            if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
-            {
-                window.close();
-                printf("Number of eaten fruit : %d\n",howManyFruitsPacmanHasEaten);
-            }
-            window.display();
+            displayImageAndText(window, you_wonSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
         else if(s[0].x == ghost1.x && s[0].y == ghost1.y || s[0].x == ghost2.x && s[0].y == ghost2.y)
         {
-            window.clear();
-            game_overSprite.setPosition(w / 2 - game_overSprite.getLocalBounds().width / 2, h / 2 - game_overSprite.getLocalBounds().height / 2);
-            window.draw(game_overSprite);
-            //window.draw(instructionToExitGame);
-
-            if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
-            {
-                window.close();
-                printf("Number of eaten fruit : %d\n",howManyFruitsPacmanHasEaten);
-            }
-            window.display();
+            displayImageAndText(window, game_overSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
         }
         
         else
