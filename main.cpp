@@ -96,18 +96,21 @@ void moveGhost(Ghost& ghost) {
     int nextX = ghost.x + dx[ghost.direction];
     int nextY = ghost.y + dy[ghost.direction];
 
-    if (mazeMatrix[nextY][nextX]) {
+    if (mazeMatrix[nextY][nextX]) 
+    {
         ghost.x = nextX;
         ghost.y = nextY;
-    } else {
-        srand(time(NULL));
+    } 
+    else 
+    {
+        //srand(time(NULL));
         ghost.direction = rand() % 4; // Change direction randomly
     }
 
     if(ghost.x >= N-1) ghost.x = 1; 
     if(ghost.x < 1)    ghost.x = N-1;
     if(ghost.y >= N-1) ghost.y = 1;
-    if(ghost.x < 1)    ghost.y = N-1;
+    if(ghost.y < 1)    ghost.y = N-1;
 }
 
 void Tick() {
@@ -203,19 +206,22 @@ int main()
 
     Clock clock;
     float timer = 0;
-    float delay = 0.05;
+    float delay = 0.1;
     f.x = 11;
     f.y = 11;
 
     s[0].x = 1;
     s[0].y = 1;
     
-    ghost1.x = N / 2;
-    ghost1.y = N / 2;
+    ghost1.x = 13;
+    ghost1.y = 1;
     
     ghost2.x = 2;
     ghost2.y = 5;
-    //ghost.direction = rand() % 4;
+    
+    srand(time(NULL));
+    ghost1.direction = rand() % 4; // Change direction randomly
+    ghost2.direction = rand() % 4; // Change direction randomly
 
     while(window.isOpen())
     {
