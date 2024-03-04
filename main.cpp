@@ -3,30 +3,13 @@
 
 using namespace sf;
 
-int N = 21;
 
-int blockSize = 32; // Adjust the size of each block
-int w = blockSize * N, h = blockSize * N;
+int N = 21, blockSize = 32; 
+int w = blockSize * N, h = blockSize * N; // Adjust the size of each block
 
 int direction = 0, howManyFruitsPacmanHasEaten = 0;
 
-bool paused = false; // Variable to track if the game is paused or not
-
-struct Pacman 
-{
-    int x,y;
-}s[100];
-
-struct Fruit
-{
-    int x,y;
-}f;
-
-struct Ghost
-{
-    int x, y;
-    int direction;
-}ghost;
+bool foodMatrix[21][21], allowMove = false, paused = false;
 
 const bool mazeMatrix[21][21] = {
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
@@ -52,7 +35,21 @@ const bool mazeMatrix[21][21] = {
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0}
         };
 
-bool foodMatrix[21][21];
+struct Pacman 
+{
+    int x,y;
+}s[100];
+
+struct Fruit
+{
+    int x,y;
+}f;
+
+struct Ghost
+{
+    int x, y;
+    int direction;
+}ghost;
 
 Ghost ghost1, ghost2;
 
@@ -77,15 +74,17 @@ void copyMatrixAndModify()
 }
 
 void movePacman() {
-    if(direction == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
-    if(direction == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
-    if(direction == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
-    if(direction == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
+    if(allowMove){
+        if(direction == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
+        if(direction == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
+        if(direction == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
+        if(direction == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
 
-    if(s[0].x >= N-1) s[0].x = 1; 
-    if(s[0].x < 1)    s[0].x = N-1;
-    if(s[0].y >= N-1) s[0].y = 1;
-    if(s[0].y < 1)    s[0].y = N-1;
+        if(s[0].x >= N-1) s[0].x = 1; 
+        if(s[0].x < 1)    s[0].x = N-1;
+        if(s[0].y >= N-1) s[0].y = 1;
+        if(s[0].y < 1)    s[0].y = N-1;
+    }
 }
 
 void moveGhost(Ghost& ghost) {
@@ -271,10 +270,10 @@ int main()
                 }
             }
             
-            if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  direction = 1;
-            if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) direction = 2;
-            if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    direction = 3;
-            if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  direction = 0;
+            if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  {allowMove = true; direction = 1;}
+            if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) {allowMove = true; direction = 2;}
+            if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    {allowMove = true; direction = 3;}
+            if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
 
             if(timer > delay)
             {
