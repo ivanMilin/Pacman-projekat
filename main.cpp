@@ -22,6 +22,12 @@ struct Fruit
     int x,y;
 }f;
 
+struct Ghost
+{
+    int x, y;
+    int direction;
+}ghost;
+
 const bool mazeMatrix[21][21] = {
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0},
         {0,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,0},
@@ -45,7 +51,10 @@ const bool mazeMatrix[21][21] = {
         {1,1,1,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,1},
         {0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0}
         };
+
 bool foodMatrix[21][21];
+
+Ghost ghost1, ghost2;
 
 // This function copies values from mazeMatrix to  
 // foodMatrix and sets edge of the matrix to zero
@@ -67,26 +76,53 @@ void copyMatrixAndModify()
     }
 }
 
-void Tick()
-{
-    // Only update the pacman if the game is not paused
-    if (!paused) 
-    { 
-        if(direction == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
-        if(direction == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
-        if(direction == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
-        if(direction == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
+void movePacman() {
+    if(direction == 0 && mazeMatrix[s[0].y + 1][s[0].x]) s[0].y += 1;
+    if(direction == 1 && mazeMatrix[s[0].y][s[0].x - 1]) s[0].x -= 1;
+    if(direction == 2 && mazeMatrix[s[0].y][s[0].x + 1]) s[0].x += 1;
+    if(direction == 3 && mazeMatrix[s[0].y - 1][s[0].x]) s[0].y -= 1;
 
-        if(s[0].x >= N-1) s[0].x = 1; 
-        if(s[0].x < 1)    s[0].x = N-1;
-        if(s[0].y >= N-1) s[0].y = 1;
-        if(s[0].y < 1)   s[0].y = N-1;
+    if(s[0].x >= N-1) s[0].x = 1; 
+    if(s[0].x < 1)    s[0].x = N-1;
+    if(s[0].y >= N-1) s[0].y = 1;
+    if(s[0].y < 1)    s[0].y = N-1;
+}
+
+void moveGhost(Ghost& ghost) {
+    // Ghost movement
+    int dx[4] = {0, 0, 1, -1};
+    int dy[4] = {1, -1, 0, 0};
+
+    int nextX = ghost.x + dx[ghost.direction];
+    int nextY = ghost.y + dy[ghost.direction];
+
+    if (mazeMatrix[nextY][nextX]) {
+        ghost.x = nextX;
+        ghost.y = nextY;
+    } else {
+        srand(time(NULL));
+        ghost.direction = rand() % 4; // Change direction randomly
+    }
+
+    if(ghost.x >= N-1) ghost.x = 1; 
+    if(ghost.x < 1)    ghost.x = N-1;
+    if(ghost.y >= N-1) ghost.y = 1;
+    if(ghost.x < 1)    ghost.y = N-1;
+}
+
+void Tick() {
+    // Only update the pacman and ghost if the game is not paused
+    if (!paused) { 
+        movePacman();
+        moveGhost(ghost1);
+        moveGhost(ghost2);
     }
 }
 
 void initializeFruits(std::vector<Fruit>& fruits) 
 {
     copyMatrixAndModify();
+    
     for(int i = 0; i < N; ++i) {
         for(int j = 0; j < N; ++j) {
             if (foodMatrix[j][i]) {
@@ -124,14 +160,22 @@ int main()
     line_vertical.setFillColor(Color::Black);
     line_horisontal.setFillColor(Color::Black);
 
-    Texture pacmanTexture, you_wonTexture;    
+    Texture pacmanTexture, you_wonTexture, ghost_redTexture,ghost_blueTexture, game_overTexture;    
     
-    if (!pacmanTexture.loadFromFile("images/pacman.png") || !you_wonTexture.loadFromFile("images/you_won.png")) {
+    if (!pacmanTexture.loadFromFile("images/pacman.png")  || 
+        !you_wonTexture.loadFromFile("images/you_won.png") || 
+        !ghost_redTexture.loadFromFile("images/ghost_red.png") ||
+        !ghost_blueTexture.loadFromFile("images/ghost_blue.png") ||
+        !game_overTexture.loadFromFile("images/game_over.png")) 
+    {
         return EXIT_FAILURE;
     }
 
     Sprite pacmanSprite(pacmanTexture);
     Sprite you_wonSprite(you_wonTexture);
+    Sprite game_overSprite(game_overTexture);
+    Sprite ghost_redSprite(ghost_redTexture);
+    Sprite ghost_blueSprite(ghost_blueTexture);
 
     Font font;
     if (!font.loadFromFile("font/Arial.ttf")) {
@@ -159,11 +203,19 @@ int main()
 
     Clock clock;
     float timer = 0;
-    float delay = 0.1;
+    float delay = 0.05;
     f.x = 11;
     f.y = 11;
+
     s[0].x = 1;
     s[0].y = 1;
+    
+    ghost1.x = N / 2;
+    ghost1.y = N / 2;
+    
+    ghost2.x = 2;
+    ghost2.y = 5;
+    //ghost.direction = rand() % 4;
 
     while(window.isOpen())
     {
@@ -179,6 +231,20 @@ int main()
             you_wonSprite.setPosition(w / 2 - you_wonSprite.getLocalBounds().width / 2, h / 2 - you_wonSprite.getLocalBounds().height / 2);
             window.draw(you_wonSprite);
             window.draw(instructionToExitGame);
+
+            if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
+            {
+                window.close();
+                printf("Number of eaten fruit : %d\n",howManyFruitsPacmanHasEaten);
+            }
+            window.display();
+        }
+        else if(s[0].x == ghost1.x && s[0].y == ghost1.y || s[0].x == ghost2.x && s[0].y == ghost2.y)
+        {
+            window.clear();
+            game_overSprite.setPosition(w / 2 - game_overSprite.getLocalBounds().width / 2, h / 2 - game_overSprite.getLocalBounds().height / 2);
+            window.draw(game_overSprite);
+            //window.draw(instructionToExitGame);
 
             if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
             {
@@ -253,6 +319,13 @@ int main()
             // Draw pacman
             pacmanSprite.setPosition(s[0].x * blockSize, s[0].y * blockSize);
             window.draw(pacmanSprite);
+
+            // Draw ghost
+            ghost_redSprite.setPosition(ghost1.x * blockSize, ghost1.y * blockSize);
+            window.draw(ghost_redSprite);
+
+            ghost_blueSprite.setPosition(ghost2.x * blockSize, ghost2.y * blockSize);
+            window.draw(ghost_blueSprite);
 
             // Draw remaining fruits
             for (const Fruit& fruit : fruits)  
