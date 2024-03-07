@@ -76,16 +76,19 @@ void copyMatrixAndModify()
 }
 
 void movePacman(Sprite& pacmanSprite) {
-    if(allowMove){
-        if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
-        if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
-        if(direction == 2 && mazeMatrix[pacman.y][pacman.x + 1]) pacman.x += 1;
-        if(direction == 3 && mazeMatrix[pacman.y - 1][pacman.x]) pacman.y -= 1;
+    if (allowMove) {
+        if (direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
+        if (direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
+        if (direction == 2 && mazeMatrix[pacman.y][pacman.x + 1]) pacman.x += 1;
+        if (direction == 3 && mazeMatrix[pacman.y - 1][pacman.x]) pacman.y -= 1;
 
-        if(pacman.x >= N-1) pacman.x = 1; 
-        if(pacman.x < 1)    pacman.x = N-1;
-        if(pacman.y >= N-1) pacman.y = 1;
-        if(pacman.y < 1)    pacman.y = N-1;
+        if (pacman.x >= N - 1) pacman.x = 1;
+        if (pacman.x < 1) pacman.x = N - 1;
+        if (pacman.y >= N - 1) pacman.y = 1;
+        if (pacman.y < 1) pacman.y = N - 1;
+
+        // Reset allowMove to prevent continuous movement
+        allowMove = false;
     }
     pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
 }
@@ -142,6 +145,8 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.clear(Color::Black);
     game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
                                  window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
+    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
+    currentScoreText.setFillColor(Color::Cyan);
     window.draw(game_overSprite);
     window.draw(currentScoreText);
     window.draw(instructionToExitGame);
@@ -172,9 +177,8 @@ void displayMap(RenderWindow& window, RectangleShape& block, RectangleShape& lin
 }
 
 int main()
-{ 
+{
     RenderWindow window(VideoMode(w,h+2*blockSize),"Pacman Game");
-    omp_set_nested(1);
 
     std::vector<Fruit> fruits;
     initializeFruits(fruits);
@@ -248,8 +252,6 @@ int main()
     ghost1.direction = rand() % 4; // Change direction randomly
     ghost2.direction = rand() % 4; // Change direction randomly
 
-
-
     while(window.isOpen())
     {
         Event e;
@@ -263,10 +265,6 @@ int main()
         {
             allowButtons = false;
             window.clear(Color::Black);
-            currentScoreText.setCharacterSize(36);
-            currentScoreText.setFillColor(Color::Black);
-            currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 1.5*blockSize);
-            
             //This function displays image and text when pacman eats ALL FOOD on map
             displayImageAndText(window, you_wonSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
         }
@@ -275,10 +273,6 @@ int main()
         {
             allowButtons = false;
             window.clear(Color::Black);
-            currentScoreText.setCharacterSize(36);
-            currentScoreText.setFillColor(Color::Cyan);
-            currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
-            
             //This function displays image and text when pacman is eaten by a ghost
             displayImageAndText(window, game_overSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
         }
@@ -295,20 +289,19 @@ int main()
             }
         }
         
-        if(allowButtons != false){
-            if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  {allowMove = true; direction = 1;}
-            if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) {allowMove = true; direction = 2;}
-            if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    {allowMove = true; direction = 3;}
-            if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
-        }
-
-        // Check if pacman meets fruit and removes fruit from map
-        for (const auto& fruit : fruits) 
-        {
-            if (pacman.x == fruit.x && pacman.y == fruit.y) 
-            {
-                removeEatenFruit(fruits, fruit.x, fruit.y);
-                howManyFruitsPacmanHasEaten++; // Increment fruit count
+        if (allowButtons != false) {
+            if (Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left)) {
+                direction = 1;
+                allowMove = true;
+            } else if (Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) {
+                direction = 2;
+                allowMove = true;
+            } else if (Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up)) {
+                direction = 3;
+                allowMove = true;
+            } else if (Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down)) {
+                direction = 0;
+                allowMove = true;
             }
         }
 
@@ -316,55 +309,73 @@ int main()
         {
             timer = 0;
 
-            #pragma omp parallel if(allowButtons)// Create parallel sections
+            #pragma omp parallel
             {
-                #pragma omp single // First section for pacman movement
-                {
-                    if (!paused && allowButtons != false) 
-                    {
-                        printf("Thread %d is moving pacman\n", omp_get_thread_num()); 
-                        movePacman(pacmanSprite);
-                    }
-                }
-
-                #pragma omp single // Second section for red ghost movement
-                {
-                    if (!paused && allowButtons != false) 
-                    {
-                        printf("Thread %d is moving red ghost\n", omp_get_thread_num()); 
-                        moveGhost(ghost1, ghost_redSprite);
-                    }
-                }
-
-                #pragma omp single // Third section for blue ghost movement
-                {
-                    if (!paused && allowButtons != false) 
-                    {
-                        printf("Thread %d is moving blue ghost\n", omp_get_thread_num()); 
-                        moveGhost(ghost2, ghost_blueSprite);
-                    }
-                }
-
                 #pragma omp single
-                {
-                    if (!paused && allowButtons != false)
+                {   
+                    #pragma omp critical(window)
                     {
-                        window.clear(Color::Black);
-                        printf("Thread %d is displayingMap, pacman, and two ghosts\n", omp_get_thread_num());
-                        displayMap(window, block, line_vertical, line_horisontal);
-                        
-                        // Draw pacman
-                        window.draw(pacmanSprite);
+                        #pragma omp task
+                        {
+                            //window.clear(Color::Black);
+                                if(!paused)
+                                {
+                                    printf("Thread %d is displayingMap, pacman, and two ghosts\n", omp_get_thread_num());
+                                    displayMap(window, block, line_vertical, line_horisontal);
+                                }
+                        }
 
-                        // Draw red ghost
-                        window.draw(ghost_redSprite);
+                        #pragma omp task
+                        {
+                            if(!paused)
+                                {
+                                    printf("Thread %d is moving pacman\n", omp_get_thread_num());
+                                    movePacman(pacmanSprite);
+                                }    
+                        }
+                        #pragma omp task
+                        {
+                            if(!paused)
+                            {
+                                printf("Thread %d is moving blue ghost\n", omp_get_thread_num());
+                                moveGhost(ghost2, ghost_blueSprite);
+                            }
+                        }
 
-                        // Draw blue ghost
-                        window.draw(ghost_blueSprite);
+                        #pragma omp task
+                        {
+                            if(!paused)
+                            {
+                                printf("Thread %d is moving red ghost\n", omp_get_thread_num()); 
+                                moveGhost(ghost1, ghost_redSprite);
+                            }
+                        }
                     }
                 }
-            }       
-            
+            #pragma omp taskwait
+            }
+
+            printf("================\n");
+
+            // Check if pacman meets fruit and removes fruit from map
+            for (const auto& fruit : fruits) 
+            {
+                if (pacman.x == fruit.x && pacman.y == fruit.y) 
+                {
+                    removeEatenFruit(fruits, fruit.x, fruit.y);
+                    howManyFruitsPacmanHasEaten++; // Increment fruit count
+                }
+            }
+
+            // Draw pacman
+            window.draw(pacmanSprite);
+
+            // Draw red ghost
+            window.draw(ghost_redSprite);
+
+            // Draw blue ghost
+            window.draw(ghost_blueSprite);
+
             // Draw remaining fruits
             for (const Fruit& fruit : fruits)  
             {
