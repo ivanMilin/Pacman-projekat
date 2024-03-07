@@ -142,8 +142,6 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.clear(Color::Black);
     game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
                                  window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
-    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
-    currentScoreText.setFillColor(Color::Cyan);
     window.draw(game_overSprite);
     window.draw(currentScoreText);
     window.draw(instructionToExitGame);
@@ -174,8 +172,9 @@ void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_v
 }
 
 int main()
-{
+{ 
     RenderWindow window(VideoMode(w,h+2*blockSize),"Pacman Game");
+    omp_set_nested(1);
 
     std::vector<Fruit> fruits;
     initializeFruits(fruits);
@@ -249,6 +248,8 @@ int main()
     ghost1.direction = rand() % 4; // Change direction randomly
     ghost2.direction = rand() % 4; // Change direction randomly
 
+
+
     while(window.isOpen())
     {
         Event e;
@@ -262,6 +263,10 @@ int main()
         {
             allowButtons = false;
             window.clear(Color::Black);
+            currentScoreText.setCharacterSize(36);
+            currentScoreText.setFillColor(Color::Black);
+            currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 1.5*blockSize);
+            
             //This function displays image and text when pacman eats ALL FOOD on map
             displayImageAndText(window, you_wonSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
         }
@@ -270,6 +275,10 @@ int main()
         {
             allowButtons = false;
             window.clear(Color::Black);
+            currentScoreText.setCharacterSize(36);
+            currentScoreText.setFillColor(Color::Cyan);
+            currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
+            
             //This function displays image and text when pacman is eaten by a ghost
             displayImageAndText(window, game_overSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
         }
@@ -293,16 +302,39 @@ int main()
             if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
         }
 
-        if(timer > delay && allowButtons != false)
+        if(timer > delay)
         {
             timer = 0;
 
-            if (!paused && allowButtons != false) 
-            { 
-                movePacman(pacmanSprite);
-                moveGhost(ghost1, ghost_redSprite);
-                moveGhost(ghost2, ghost_blueSprite);
-            }
+            #pragma omp parallel // Create parallel sections
+            {
+                #pragma omp single // First section for pacman movement
+                {
+                    //printf("Thread %d is moving pacman\n", omp_get_thread_num());
+                    if (!paused && allowButtons != false) 
+                    { 
+                        movePacman(pacmanSprite);
+                    }
+                }
+
+                #pragma omp single // Second section for red ghost movement
+                {
+                    //printf("Thread %d is moving red ghost\n", omp_get_thread_num());
+                    if (!paused && allowButtons != false) 
+                    { 
+                        moveGhost(ghost1, ghost_redSprite);
+                    }
+                }
+
+                #pragma omp single // Third section for blue ghost movement
+                {
+                    //printf("Thread %d is moving blue ghost\n", omp_get_thread_num());
+                    if (!paused && allowButtons != false) 
+                    { 
+                        moveGhost(ghost2, ghost_blueSprite);
+                    }
+                }
+            }       
 
             // Check if pacman meets fruit and removes fruit from map
             for (const auto& fruit : fruits) 
