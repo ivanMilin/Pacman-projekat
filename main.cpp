@@ -148,7 +148,7 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.display();
 }
 
-void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal) {
+void displayMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal) {
     // Draw grid
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -302,64 +302,69 @@ int main()
             if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
         }
 
+        // Check if pacman meets fruit and removes fruit from map
+        for (const auto& fruit : fruits) 
+        {
+            if (pacman.x == fruit.x && pacman.y == fruit.y) 
+            {
+                removeEatenFruit(fruits, fruit.x, fruit.y);
+                howManyFruitsPacmanHasEaten++; // Increment fruit count
+            }
+        }
+
         if(timer > delay)
         {
             timer = 0;
 
-            #pragma omp parallel // Create parallel sections
+            #pragma omp parallel if(allowButtons)// Create parallel sections
             {
                 #pragma omp single // First section for pacman movement
                 {
-                    //printf("Thread %d is moving pacman\n", omp_get_thread_num());
                     if (!paused && allowButtons != false) 
-                    { 
+                    {
+                        printf("Thread %d is moving pacman\n", omp_get_thread_num()); 
                         movePacman(pacmanSprite);
                     }
                 }
 
                 #pragma omp single // Second section for red ghost movement
                 {
-                    //printf("Thread %d is moving red ghost\n", omp_get_thread_num());
                     if (!paused && allowButtons != false) 
-                    { 
+                    {
+                        printf("Thread %d is moving red ghost\n", omp_get_thread_num()); 
                         moveGhost(ghost1, ghost_redSprite);
                     }
                 }
 
                 #pragma omp single // Third section for blue ghost movement
                 {
-                    //printf("Thread %d is moving blue ghost\n", omp_get_thread_num());
                     if (!paused && allowButtons != false) 
-                    { 
+                    {
+                        printf("Thread %d is moving blue ghost\n", omp_get_thread_num()); 
                         moveGhost(ghost2, ghost_blueSprite);
                     }
                 }
-            }       
 
-            // Check if pacman meets fruit and removes fruit from map
-            for (const auto& fruit : fruits) 
-            {
-                if (pacman.x == fruit.x && pacman.y == fruit.y) 
+                #pragma omp single
                 {
-                    removeEatenFruit(fruits, fruit.x, fruit.y);
-                    howManyFruitsPacmanHasEaten++; // Increment fruit count
+                    if (!paused && allowButtons != false)
+                    {
+                        window.clear(Color::Black);
+                        printf("Thread %d is displayingMap, pacman, and two ghosts\n", omp_get_thread_num());
+                        displayMap(window, block, line_vertical, line_horisontal);
+                        
+                        // Draw pacman
+                        window.draw(pacmanSprite);
+
+                        // Draw red ghost
+                        window.draw(ghost_redSprite);
+
+                        // Draw blue ghost
+                        window.draw(ghost_blueSprite);
+                    }
                 }
-            }
-
-            window.clear(Color::Black);
-
-            // Draw grid
-            drawMap(window, block, line_vertical, line_horisontal);
-
-            // Draw pacman
-            window.draw(pacmanSprite);
-
-            // Draw red ghost
-            window.draw(ghost_redSprite);
-
-            // Draw blue ghost
-            window.draw(ghost_blueSprite);
-
+            }       
+            
             // Draw remaining fruits
             for (const Fruit& fruit : fruits)  
             {
