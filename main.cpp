@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <time.h>
+#include <omp.h>
 
 using namespace sf;
 
@@ -9,7 +10,7 @@ int w = blockSize * N, h = blockSize * N; // Adjust the size of each block
 
 int direction = 0, howManyFruitsPacmanHasEaten = 0;
 
-bool allowMove = false, paused = false; 
+bool allowMove = false, paused = false, allowButtons = true; 
 
 bool foodMatrix[21][21]; 
 const bool mazeMatrix[21][21] = {
@@ -74,7 +75,7 @@ void copyMatrixAndModify()
     }
 }
 
-void movePacman() {
+void movePacman(Sprite& pacmanSprite) {
     if(allowMove){
         if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
         if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
@@ -86,9 +87,10 @@ void movePacman() {
         if(pacman.y >= N-1) pacman.y = 1;
         if(pacman.y < 1)    pacman.y = N-1;
     }
+    pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
 }
 
-void moveGhost(Ghost& ghost) {
+void moveGhost(Ghost& ghost, Sprite& ghostSprite) {
     // Ghost movement
     int dx[4] = {0, 0, 1, -1};
     int dy[4] = {1, -1, 0, 0};
@@ -111,6 +113,8 @@ void moveGhost(Ghost& ghost) {
     if(ghost.x < 1)    ghost.x = N-1;
     if(ghost.y >= N-1) ghost.y = 1;
     if(ghost.y < 1)    ghost.y = N-1;
+
+    ghostSprite.setPosition(ghost.x * blockSize, ghost.y * blockSize);
 }
 
 void initializeFruits(std::vector<Fruit>& fruits) 
@@ -134,21 +138,39 @@ void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y)
     fruits.erase(it, fruits.end());
 }
 
-void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame, int score) {
-    window.clear();
+void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame,Text& currentScoreText, int score) {
+    window.clear(Color::Black);
     game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
                                  window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
+    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
+    currentScoreText.setFillColor(Color::Cyan);
     window.draw(game_overSprite);
+    window.draw(currentScoreText);
     window.draw(instructionToExitGame);
+    window.display();
+}
 
-    Event e;
-    while (window.pollEvent(e)) {
-        if (e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape)) {
-            window.close();
-            printf("Number of eaten fruit : %d\n", score);
+void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal) {
+    // Draw grid
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            block.setPosition(i * blockSize, j * blockSize);
+            if (mazeMatrix[j][i]) {
+                block.setFillColor(Color::Black); // Set color to black if matrix value is one
+            } else {
+                block.setFillColor(Color(0, 0, 139)); // Set color to dark blue if matrix value is zero
+            }
+            window.draw(block);
         }
     }
-    window.display();
+
+    // Draw vertical and horizontal lines
+    for (int i = 1; i < N; i++) {
+        line_vertical.setPosition(i * blockSize, 0);
+        line_horizontal.setPosition(0, i * blockSize);
+        window.draw(line_vertical);
+        window.draw(line_horizontal);
+    }
 }
 
 int main()
@@ -203,16 +225,16 @@ int main()
     currentScoreText.setFont(font);
     currentScoreText.setCharacterSize(24);
     currentScoreText.setFillColor(Color::White);
-    currentScoreText.setPosition(w / 2 - pausedText.getLocalBounds().width / 2 + blockSize, h + blockSize);
+    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize, h + blockSize);
 
     //This text is meant for printing text when game is over to tell you how to exit window
-    Text instructionToExitGame("=> Press Esc to exit <=", font, 48);
+    Text instructionToExitGame("=> Press Esc to exit <=", font, 36);
     instructionToExitGame.setFillColor(Color::Cyan);
     instructionToExitGame.setStyle(Text::Bold);
     instructionToExitGame.setPosition(w / 2 - instructionToExitGame.getLocalBounds().width / 2, h);
 
     Clock clock;
-    float timer = 0, delay = 0.15;
+    float timer = 0, delay = 0.2;
 
     pacman.x = 1;
     pacman.y = 1;
@@ -234,93 +256,76 @@ int main()
         clock.restart();
         timer += time;
         
-        if(howManyFruitsPacmanHasEaten == 20) 
+        if(howManyFruitsPacmanHasEaten == 50) 
         // In order to redunce time for testing game uncomment if-statement above and comment if-statement below
         // if(howManyFruitsPacmanHasEaten == numberOfFruitsOnMap)
         {
+            allowButtons = false;
+            window.clear(Color::Black);
             //This function displays image and text when pacman eats ALL FOOD on map
-            displayImageAndText(window, you_wonSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
-        }
-        else if(pacman.x == ghost1.x && pacman.y == ghost1.y || pacman.x == ghost2.x && pacman.y == ghost2.y)
-        {
-            //This function displays image and text when pacman is eaten by a ghost
-            displayImageAndText(window, game_overSprite, instructionToExitGame, howManyFruitsPacmanHasEaten);
+            displayImageAndText(window, you_wonSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
         }
         
-        else
+        if((pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x == ghost2.x && pacman.y == ghost2.y))
         {
-            while(window.pollEvent(e))
+            allowButtons = false;
+            window.clear(Color::Black);
+            //This function displays image and text when pacman is eaten by a ghost
+            displayImageAndText(window, game_overSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
+        }
+        
+        while(window.pollEvent(e))
+        {
+            if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
             {
-                if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
-                {
-                    window.close();
-                    printf("Number of fruit : %d\n", howManyFruitsPacmanHasEaten);
-                }
-                if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
-                    paused = !paused; // Toggle pause state when space is pressed
-                }
+                window.close();
+                printf("Number of fruit : %d\n", howManyFruitsPacmanHasEaten);
             }
-            
+            if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
+                paused = !paused; // Toggle pause state when space is pressed
+            }
+        }
+        
+        if(allowButtons != false){
             if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  {allowMove = true; direction = 1;}
             if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) {allowMove = true; direction = 2;}
             if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    {allowMove = true; direction = 3;}
             if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
+        }
 
-            if(timer > delay)
+        if(timer > delay && allowButtons != false)
+        {
+            timer = 0;
+
+            if (!paused && allowButtons != false) 
+            { 
+                movePacman(pacmanSprite);
+                moveGhost(ghost1, ghost_redSprite);
+                moveGhost(ghost2, ghost_blueSprite);
+            }
+
+            // Check if pacman meets fruit and removes fruit from map
+            for (const auto& fruit : fruits) 
             {
-                timer = 0;
-
-                if (!paused) { 
-                    movePacman();
-                    moveGhost(ghost1);
-                    moveGhost(ghost2);
-                }
-
-                // Check if pacman meets fruit
-                for (const auto& fruit : fruits) 
+                if (pacman.x == fruit.x && pacman.y == fruit.y) 
                 {
-                    if (pacman.x == fruit.x && pacman.y == fruit.y) 
-                    {
-                        removeEatenFruit(fruits, fruit.x, fruit.y);
-                        howManyFruitsPacmanHasEaten++; // Increment fruit count
-                    }
+                    removeEatenFruit(fruits, fruit.x, fruit.y);
+                    howManyFruitsPacmanHasEaten++; // Increment fruit count
                 }
             }
 
-            window.clear();
+            window.clear(Color::Black);
 
             // Draw grid
-            for(int i = 0; i < N; i++) {
-                for(int j = 0; j < N; j++) {
-                    block.setPosition(i * blockSize, j * blockSize);
-                    if (mazeMatrix[j][i]) 
-                    {
-                        block.setFillColor(Color::Black); // Set color to black if matrix value is one
-                    } else {
-                        block.setFillColor(Color(0, 0, 139)); // Set color to dark blue if matrix value is zero
-                    }
-                    window.draw(block);
-                }
-            }
-
-            // Draw vertical and horisontal lines
-            for(int i = 1; i < N; i++) {
-                line_vertical.setPosition(i * blockSize, 0);
-                line_horisontal.setPosition(0, i * blockSize);
-                window.draw(line_vertical);
-                window.draw(line_horisontal);
-            }
+            drawMap(window, block, line_vertical, line_horisontal);
 
             // Draw pacman
-            pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
             window.draw(pacmanSprite);
 
             // Draw red ghost
-            ghost_redSprite.setPosition(ghost1.x * blockSize, ghost1.y * blockSize);
             window.draw(ghost_redSprite);
 
             // Draw blue ghost
-            ghost_blueSprite.setPosition(ghost2.x * blockSize, ghost2.y * blockSize);
             window.draw(ghost_blueSprite);
 
             // Draw remaining fruits
@@ -340,9 +345,9 @@ int main()
             std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
             currentScoreText.setString("Score : " + fruit_eaten);
             
-            window.draw(currentScoreText);
-            window.display();
-        }   
+            window.draw(currentScoreText);   
+        }
+        window.display();
     }
     return 0;
 }
