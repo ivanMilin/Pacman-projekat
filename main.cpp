@@ -134,17 +134,26 @@ void initializeFruits(std::vector<Fruit>& fruits)
 
 void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y) 
 {
-    auto it = std::remove_if(fruits.begin(), fruits.end(), [x, y](const Fruit& fruit) {
-        return fruit.x == x && fruit.y == y;
-    });
-    fruits.erase(it, fruits.end());
+    for (auto it = fruits.begin(); it != fruits.end(); ) {
+        if (it->x == x && it->y == y) 
+        {
+            it = fruits.erase(it);
+        } 
+        else 
+        {
+            ++it;
+        }
+    }
 }
 
-void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame,Text& currentScoreText, int score) {
+void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame,Text& currentScoreText, int score) 
+{
     window.clear(Color::Black);
-    game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
-                                 window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
+    currentScoreText.setCharacterSize(36);
+    
+    game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
     currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 1.5*blockSize);
+    
     window.draw(game_overSprite);
     window.draw(currentScoreText);
     window.draw(instructionToExitGame);
@@ -156,9 +165,12 @@ void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_v
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
             block.setPosition(i * blockSize, j * blockSize);
-            if (mazeMatrix[j][i]) {
+            if (mazeMatrix[j][i]) 
+            {
                 block.setFillColor(Color::Black); // Set color to black if matrix value is one
-            } else {
+            } 
+            else 
+            {
                 block.setFillColor(Color(0, 0, 139)); // Set color to dark blue if matrix value is zero
             }
             window.draw(block);
@@ -166,7 +178,8 @@ void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_v
     }
 
     // Draw vertical and horizontal lines
-    for (int i = 1; i < N; i++) {
+    for (int i = 1; i < N; i++) 
+    {
         line_vertical.setPosition(i * blockSize, 0);
         line_horizontal.setPosition(0, i * blockSize);
         window.draw(line_vertical);
@@ -230,7 +243,8 @@ int main()
     Sprite ghost_blueSprite(ghost_blueTexture);
 
     Font font;
-    if (!font.loadFromFile("font/Arial.ttf")) {
+    if (!font.loadFromFile("font/Arial.ttf")) 
+    {
         return EXIT_FAILURE;
     }
 
@@ -288,9 +302,7 @@ int main()
                 {
                     allowButtons = false;
                     window.clear(Color::Black);
-                    currentScoreText.setCharacterSize(36);
                     currentScoreText.setFillColor(Color::Black);
-                    
                     
                     //This function displays image and text when pacman eats ALL FOOD on map
                     displayImageAndText(window, you_wonSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
