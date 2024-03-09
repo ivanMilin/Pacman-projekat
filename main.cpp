@@ -218,7 +218,6 @@ int main()
     initializeFruits(fruits);
     
     int totalNumberOfFruitsOnMap = fruits.size();
-    printf("Total number of fruits : %d\n", totalNumberOfFruitsOnMap);
 
     RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and pacman
     RectangleShape line_vertical(Vector2f(1.f, h));       // Create a vertical line
@@ -333,7 +332,8 @@ int main()
             if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
             {
                 window.close();
-                printf("Number of fruit : %d\n", howManyFruitsPacmanHasEaten);
+                printf("Total number of fruits :    %d\n", totalNumberOfFruitsOnMap);
+                printf("Number of fruit pacman ate: %d\n", howManyFruitsPacmanHasEaten);
             }
             if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
                 paused = !paused; // Toggle pause state when space is pressed
@@ -355,7 +355,7 @@ int main()
             {
                 #pragma omp parallel
                 {
-                    #pragma omp single
+                    #pragma omp single nowait
                     {
                         #pragma omp task
                         {
@@ -372,7 +372,7 @@ int main()
                                 // Draw blue ghost
                                 window.draw(ghost_blueSprite);
 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }    
@@ -386,7 +386,7 @@ int main()
                                 printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
                                 moveGhost(ghost1, ghost_redSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
@@ -401,7 +401,7 @@ int main()
                                 printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
                                 moveGhost(ghost2, ghost_blueSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
@@ -415,7 +415,7 @@ int main()
                                 printf("Thread %d pacmanSprite\n", omp_get_thread_num());
                                 movePacman(pacmanSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
