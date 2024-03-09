@@ -372,7 +372,7 @@ int main()
                                 // Draw blue ghost
                                 window.draw(ghost_blueSprite);
 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }    
@@ -386,7 +386,7 @@ int main()
                                 printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
                                 moveGhost(ghost1, ghost_redSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
@@ -401,7 +401,7 @@ int main()
                                 printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
                                 moveGhost(ghost2, ghost_blueSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
@@ -415,14 +415,14 @@ int main()
                                 printf("Thread %d pacmanSprite\n", omp_get_thread_num());
                                 movePacman(pacmanSprite);
                                 
-                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x || pacman.y == ghost2.y))
                                 {
                                     break;        
                                 }
                             }
                         }
+                        #pragma omp taskwait
                     }
-                    //#pragma omp taskwait
                 }
                 printf("=============================\n");
             
