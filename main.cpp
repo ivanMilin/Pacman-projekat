@@ -77,7 +77,8 @@ void copyMatrixAndModify()
     }
 }
 
-void movePacman(Sprite& pacmanSprite) {
+void movePacman(Sprite& pacmanSprite) 
+{
     if(allowMove){
         if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
         if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
@@ -92,7 +93,8 @@ void movePacman(Sprite& pacmanSprite) {
     pacmanSprite.setPosition(pacman.x * blockSize, pacman.y * blockSize);
 }
 
-void moveGhost(Ghost& ghost, Sprite& ghostSprite) {
+void moveGhost(Ghost& ghost, Sprite& ghostSprite) 
+{
     // Ghost movement
     int dx[4] = {0, 0, 1, -1};
     int dy[4] = {1, -1, 0, 0};
@@ -160,7 +162,8 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.display();
 }
 
-void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal, CircleShape& fruitShape) {
+void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal, CircleShape& fruitShape) 
+{
     window.clear();
     // Draw grid
     for (int i = 0; i < N; i++) {
@@ -214,8 +217,8 @@ int main()
 
     initializeFruits(fruits);
     
-    int numberOfFruitsOnMap = fruits.size();
-    printf("Total number of fruits : %d\n", numberOfFruitsOnMap);
+    int totalNumberOfFruitsOnMap = fruits.size();
+    printf("Total number of fruits : %d\n", totalNumberOfFruitsOnMap);
 
     RectangleShape block(Vector2f(blockSize, blockSize)); // Create a rectangle shape for grid and pacman
     RectangleShape line_vertical(Vector2f(1.f, h));       // Create a vertical line
@@ -297,9 +300,9 @@ int main()
         {
             #pragma omp section
             {
-                if(howManyFruitsPacmanHasEaten == 50) 
+                if(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap) 
                 // In order to redunce time for testing game uncomment if-statement above and comment if-statement below
-                // if(howManyFruitsPacmanHasEaten == numberOfFruitsOnMap)
+                // if(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap)
                 {
                     allowButtons = false;
                     window.clear(Color::Black);
@@ -316,7 +319,6 @@ int main()
                 {
                     allowButtons = false;
                     window.clear(Color::Black);
-                    currentScoreText.setCharacterSize(36);
                     currentScoreText.setFillColor(Color::Cyan);
                     
                     //This function displays image and text when pacman is eaten by a ghost
