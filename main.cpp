@@ -55,6 +55,8 @@ struct Ghost
 
 Ghost ghost1, ghost2;
 
+std::vector<Fruit> fruits;
+
 // This function copies values from mazeMatrix to  
 // foodMatrix and sets edge of the matrix to zero
 void copyMatrixAndModify()
@@ -142,13 +144,14 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.clear(Color::Black);
     game_overSprite.setPosition(window.getSize().x / 2 - game_overSprite.getLocalBounds().width / 2, 
                                  window.getSize().y / 2 - game_overSprite.getLocalBounds().height / 2);
+    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 1.5*blockSize);
     window.draw(game_overSprite);
     window.draw(currentScoreText);
     window.draw(instructionToExitGame);
     window.display();
 }
 
-void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal) {
+void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal, CircleShape& fruitShape) {
     // Draw grid
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -169,6 +172,25 @@ void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_v
         window.draw(line_vertical);
         window.draw(line_horizontal);
     }
+
+    // Draw remaining fruits
+    for (const Fruit& fruit : fruits)  
+    {
+        float fruitPosX = fruit.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
+        float fruitPosY = fruit.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
+        fruitShape.setPosition(fruitPosX, fruitPosY);
+        window.draw(fruitShape);
+    }
+
+    // Check if pacman meets fruit and removes fruit from map
+    for (const auto& fruit : fruits) 
+    {
+        if (pacman.x == fruit.x && pacman.y == fruit.y) 
+        {
+            removeEatenFruit(fruits, fruit.x, fruit.y);
+            howManyFruitsPacmanHasEaten++; // Increment fruit count
+        }
+    }
 }
 
 int main()
@@ -176,7 +198,6 @@ int main()
     RenderWindow window(VideoMode(w,h+2*blockSize),"Pacman Game");
     omp_set_nested(1);
 
-    std::vector<Fruit> fruits;
     initializeFruits(fruits);
     
     int numberOfFruitsOnMap = fruits.size();
@@ -239,7 +260,7 @@ int main()
     pacman.y = 1;
     
     ghost1.x = 13;
-    ghost1.y = 1;
+    ghost1.y = 2;
     
     ghost2.x = 2;
     ghost2.y = 5;
@@ -257,9 +278,9 @@ int main()
         clock.restart();
         timer += time;
         
-        #pragma omp parallel
+        #pragma omp parallel sections
         {
-            #pragma omp single
+            #pragma omp section
             {
                 if(howManyFruitsPacmanHasEaten == 50) 
                 // In order to redunce time for testing game uncomment if-statement above and comment if-statement below
@@ -269,19 +290,21 @@ int main()
                     window.clear(Color::Black);
                     currentScoreText.setCharacterSize(36);
                     currentScoreText.setFillColor(Color::Black);
-                    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 1.5*blockSize);
+                    
                     
                     //This function displays image and text when pacman eats ALL FOOD on map
                     displayImageAndText(window, you_wonSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
                 }
-                
+            }
+            
+            #pragma omp section
+            {    
                 if((pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x == ghost2.x && pacman.y == ghost2.y))
                 {
                     allowButtons = false;
                     window.clear(Color::Black);
                     currentScoreText.setCharacterSize(36);
                     currentScoreText.setFillColor(Color::Cyan);
-                    currentScoreText.setPosition(w / 2 - currentScoreText.getLocalBounds().width / 2 - blockSize + blockSize, h - 2*blockSize);
                     
                     //This function displays image and text when pacman is eaten by a ghost
                     displayImageAndText(window, game_overSprite, instructionToExitGame, currentScoreText, howManyFruitsPacmanHasEaten);
@@ -315,77 +338,59 @@ int main()
 
             if (!paused && allowButtons != false) 
             {
-                #pragma omp parallel
+                #pragma omp parallel 
                 {
                     #pragma omp single
                     {
-                        #pragma omp task
+                        if(howManyFruitsPacmanHasEaten < 50 && (pacman.x != ghost1.x || pacman.y != ghost1.y) && (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
                         {
-                            printf("Thread %d drawMap\n", omp_get_thread_num());
-                            drawMap(window, block, line_vertical, line_horisontal);
-                        }
+                            #pragma omp task
+                            {
+                                printf("Thread %d drawMap\n", omp_get_thread_num());
+                                drawMap(window, block, line_vertical, line_horisontal, fruitShape);
+                            }
 
-                        #pragma omp task
-                        {
-                            printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
-                            moveGhost(ghost1, ghost_redSprite);
-                        }
+                            #pragma omp task
+                            {
+                                printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
+                                moveGhost(ghost1, ghost_redSprite);
+                            }
 
-                        #pragma omp task
-                        {
-                            printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
-                            moveGhost(ghost2, ghost_blueSprite);
-                        }
+                            #pragma omp task
+                            {
+                                printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
+                                moveGhost(ghost2, ghost_blueSprite);
+                            }
 
-                        #pragma omp task
-                        {
-                            printf("Thread %d pacmanSprite\n", omp_get_thread_num());
-                            movePacman(pacmanSprite);
+                            #pragma omp task
+                            {
+                                printf("Thread %d pacmanSprite\n", omp_get_thread_num());
+                                movePacman(pacmanSprite);
+                            }
                         }
+                        #pragma omp taskwait
                     }
-                    #pragma omp taskwait
                 }
-            }
             
-            printf("=============================\n");
+                // Draw pacman
+                window.draw(pacmanSprite);
 
-            // Check if pacman meets fruit and removes fruit from map
-            for (const auto& fruit : fruits) 
-            {
-                if (pacman.x == fruit.x && pacman.y == fruit.y) 
+                // Draw red ghost
+                window.draw(ghost_redSprite);
+
+                // Draw blue ghost
+                window.draw(ghost_blueSprite);
+                printf("=============================\n");
+            
+                if (paused)
                 {
-                    removeEatenFruit(fruits, fruit.x, fruit.y);
-                    howManyFruitsPacmanHasEaten++; // Increment fruit count
+                    window.draw(pausedText);
                 }
-            }
 
-            // Draw pacman
-            window.draw(pacmanSprite);
-
-            // Draw red ghost
-            window.draw(ghost_redSprite);
-
-            // Draw blue ghost
-            window.draw(ghost_blueSprite);
-
-            // Draw remaining fruits
-            for (const Fruit& fruit : fruits)  
-            {
-                float fruitPosX = fruit.x * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
-                float fruitPosY = fruit.y * blockSize + (blockSize - fruitShape.getRadius() * 2) / 2;
-                fruitShape.setPosition(fruitPosX, fruitPosY);
-                window.draw(fruitShape);
-            }
-
-            if (paused)
-            {
-                window.draw(pausedText);
-            }
-
-            std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
-            currentScoreText.setString("Score : " + fruit_eaten);
-            
-            window.draw(currentScoreText);   
+                std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
+                currentScoreText.setString("Score : " + fruit_eaten);
+                window.draw(currentScoreText); 
+            }  
         }
         window.display();
     }
