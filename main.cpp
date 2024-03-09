@@ -332,8 +332,7 @@ int main()
             if(e.type == Event::Closed || Keyboard::isKeyPressed(Keyboard::Escape))
             {
                 window.close();
-                printf("Total number of fruits :    %d\n", totalNumberOfFruitsOnMap);
-                printf("Number of fruit pacman ate: %d\n", howManyFruitsPacmanHasEaten);
+                printf("Number of fruit pacman ate : %d/%d\n", howManyFruitsPacmanHasEaten,totalNumberOfFruitsOnMap);
             }
             if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
                 paused = !paused; // Toggle pause state when space is pressed
@@ -425,16 +424,16 @@ int main()
                     }
                 }
                 printf("=============================\n");
-            
-                if (paused)
-                {
-                    window.draw(pausedText);
-                }
 
                 std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
                 currentScoreText.setString("Score : " + fruit_eaten);
                 window.draw(currentScoreText); 
             }  
+            
+            if (paused)
+            {
+                window.draw(pausedText);
+            }
         }
         window.display();
     }
