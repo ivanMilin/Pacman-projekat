@@ -161,6 +161,7 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
 }
 
 void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal, CircleShape& fruitShape) {
+    window.clear();
     // Draw grid
     for (int i = 0; i < N; i++) {
         for (int j = 0; j < N; j++) {
@@ -350,48 +351,77 @@ int main()
 
             if (!paused && allowButtons != false) 
             {
-                #pragma omp parallel 
+                #pragma omp parallel
                 {
                     #pragma omp single
                     {
-                        if(howManyFruitsPacmanHasEaten < 50 && (pacman.x != ghost1.x || pacman.y != ghost1.y) && (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                        #pragma omp task
                         {
-                            #pragma omp task
+                            while(1)
                             {
                                 printf("Thread %d drawMap\n", omp_get_thread_num());
                                 drawMap(window, block, line_vertical, line_horisontal, fruitShape);
-                            }
+                                // Draw pacman
+                                window.draw(pacmanSprite);
 
-                            #pragma omp task
+                                // Draw red ghost
+                                window.draw(ghost_redSprite);
+
+                                // Draw blue ghost
+                                window.draw(ghost_blueSprite);
+
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                {
+                                    break;        
+                                }    
+                            }
+                        }
+
+                        #pragma omp task
+                        {
+                            while(1)
                             {
                                 printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
                                 moveGhost(ghost1, ghost_redSprite);
+                                
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                {
+                                    break;        
+                                }
                             }
+                            
+                        }
 
-                            #pragma omp task
+                        #pragma omp task
+                        {
+                            while(1)
                             {
                                 printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
                                 moveGhost(ghost2, ghost_blueSprite);
+                                
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                {
+                                    break;        
+                                }
                             }
+                        }
 
-                            #pragma omp task
+                        #pragma omp task
+                        {
+                            while(1)
                             {
                                 printf("Thread %d pacmanSprite\n", omp_get_thread_num());
                                 movePacman(pacmanSprite);
+                                
+                                if(howManyFruitsPacmanHasEaten < 50 || (pacman.x != ghost1.x && pacman.y != ghost1.y) || (pacman.x !=  ghost2.x || pacman.y != ghost2.y))
+                                {
+                                    break;        
+                                }
                             }
                         }
-                        #pragma omp taskwait
                     }
+                    //#pragma omp taskwait
                 }
-            
-                // Draw pacman
-                window.draw(pacmanSprite);
-
-                // Draw red ghost
-                window.draw(ghost_redSprite);
-
-                // Draw blue ghost
-                window.draw(ghost_blueSprite);
                 printf("=============================\n");
             
                 if (paused)
