@@ -275,7 +275,7 @@ int main()
     instructionToExitGame.setPosition(w / 2 - instructionToExitGame.getLocalBounds().width / 2, h);
 
     Clock clock;
-    float timer = 0, delay = 0.18;
+    float timer = 0, delay = 0.185;
 
     pacman.x = 1;
     pacman.y = 1;
