@@ -271,7 +271,7 @@ int main()
     instructionToExitGame.setPosition(w / 2 - instructionToExitGame.getLocalBounds().width / 2, h);
 
     Clock clock;
-    float timer = 0, delay = 0.2;
+    float timer = 0, delay = 0.18;
 
     pacman.x = 1;
     pacman.y = 1;
@@ -350,7 +350,7 @@ int main()
         {
             timer = 0;
 
-            if (!paused && allowButtons != false) 
+            if (!paused) 
             {
                 #pragma omp parallel
                 {
@@ -358,7 +358,8 @@ int main()
                     {
                         #pragma omp task
                         {
-                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y)))
+                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || 
+                                (pacman.x ==  ghost2.x && pacman.y == ghost2.y)) && allowButtons != false)
                             {
                                 printf("Thread %d drawMap\n", omp_get_thread_num());
                                 drawMap(window, block, line_vertical, line_horisontal, fruitShape);
@@ -375,7 +376,8 @@ int main()
 
                         #pragma omp task
                         {
-                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y)))
+                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || 
+                                (pacman.x ==  ghost2.x && pacman.y == ghost2.y)) && allowButtons != false)
                             {
                                 printf("Thread %d ghost_redSprite\n", omp_get_thread_num());
                                 moveGhost(ghost1, ghost_redSprite);
@@ -384,7 +386,8 @@ int main()
 
                         #pragma omp task
                         {
-                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y)))
+                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || 
+                                (pacman.x ==  ghost2.x && pacman.y == ghost2.y)) && allowButtons != false)
                             {
                                 printf("Thread %d ghost_blueSprite\n", omp_get_thread_num());
                                 moveGhost(ghost2, ghost_blueSprite);        
@@ -393,7 +396,8 @@ int main()
 
                         #pragma omp task
                         {
-                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || (pacman.x ==  ghost2.x && pacman.y == ghost2.y)))
+                            if(!(howManyFruitsPacmanHasEaten == totalNumberOfFruitsOnMap || (pacman.x == ghost1.x && pacman.y == ghost1.y) || 
+                                (pacman.x ==  ghost2.x && pacman.y == ghost2.y)) && allowButtons != false)
                             {
                                 printf("Thread %d pacmanSprite\n", omp_get_thread_num());
                                 movePacman(pacmanSprite);        
