@@ -351,6 +351,12 @@ int main()
             if(Keyboard::isKeyPressed(Keyboard::S) || Keyboard::isKeyPressed(Keyboard::Down))  {allowMove = true; direction = 0;}
         }
 
+
+        //Under the map we display how many fruits pacman has eaten
+        std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
+        currentScoreText.setString("Score : " + fruit_eaten);
+        window.draw(currentScoreText); 
+        
         if(timer > delay && allowButtons != false)
         {
             timer = 0;
@@ -412,11 +418,6 @@ int main()
                     }
                 }
                 printf("=============================\n");
-
-                //Under the map we display how many fruits pacman has eaten
-                std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
-                currentScoreText.setString("Score : " + fruit_eaten);
-                window.draw(currentScoreText); 
             }  
         }
         window.display();
