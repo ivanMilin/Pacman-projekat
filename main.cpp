@@ -283,8 +283,8 @@ int main()
     ghost1.x = 13;
     ghost1.y = 2;
     
-    ghost2.x = 2;
-    ghost2.y = 5;
+    ghost2.x = 11;
+    ghost2.y = 9;
     
     srand(time(NULL));
     ghost1.direction = rand() % 4; // Change direction randomly
