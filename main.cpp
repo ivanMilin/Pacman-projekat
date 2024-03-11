@@ -340,6 +340,7 @@ int main()
             }
             if(e.type == Event::KeyPressed && e.key.code == Keyboard::Space) {
                 paused = !paused; // Toggle pause state when space is pressed
+                window.draw(pausedText);
             }
         }
         
@@ -417,11 +418,6 @@ int main()
                 currentScoreText.setString("Score : " + fruit_eaten);
                 window.draw(currentScoreText); 
             }  
-            
-            if (paused)
-            {
-                window.draw(pausedText);
-            }
         }
         window.display();
     }
