@@ -121,6 +121,7 @@ void moveGhost(Ghost& ghost, Sprite& ghostSprite)
     ghostSprite.setPosition(ghost.x * blockSize, ghost.y * blockSize);
 }
 
+//This function put fruits on map wherever foodMatrix is equal to ONE
 void initializeFruits(std::vector<Fruit>& fruits) 
 {
     copyMatrixAndModify();
@@ -134,6 +135,7 @@ void initializeFruits(std::vector<Fruit>& fruits)
     }
 }
 
+//This function removes from vector fruit on specific coordinates
 void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y) 
 {
     for (auto it = fruits.begin(); it != fruits.end(); ) {
@@ -148,6 +150,7 @@ void removeEatenFruit(std::vector<Fruit>& fruits, int x, int y)
     }
 }
 
+//If ghost eats pacman or pacman eats all fruits on the map we call this function to display image 'game_over' or 'you_won' 
 void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& instructionToExitGame,Text& currentScoreText, int score) 
 {
     window.clear(Color::Black);
@@ -162,6 +165,7 @@ void displayImageAndText(RenderWindow& window, Sprite& game_overSprite, Text& in
     window.display();
 }
 
+// This function draws map and removes fruits from map if pacman eats fruit
 void drawMap(RenderWindow& window, RectangleShape& block, RectangleShape& line_vertical, RectangleShape& line_horizontal, CircleShape& fruitShape) 
 {
     window.clear();
@@ -408,6 +412,7 @@ int main()
                 }
                 printf("=============================\n");
 
+                //Under the map we display how many fruits pacman has eaten
                 std::string fruit_eaten = std::to_string(howManyFruitsPacmanHasEaten);
                 currentScoreText.setString("Score : " + fruit_eaten);
                 window.draw(currentScoreText); 
