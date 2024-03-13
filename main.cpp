@@ -66,12 +66,15 @@ void copyMatrixAndModify()
            foodMatrix[i][j] = mazeMatrix[i][j]; 
         }
     }
-    for(int i = 0; i < N; i++){
+    
+    for(int i = 0; i < N; i++)
+    {
         foodMatrix[i][0] = 0;
         foodMatrix[i][N-1] = 0; 
     }
 
-    for(int i = 0; i < N; i++){
+    for(int i = 0; i < N; i++)
+    {
         foodMatrix[0][i] = 0;
         foodMatrix[N-1][i] = 0; 
     }
@@ -80,10 +83,12 @@ void copyMatrixAndModify()
 void movePacman(Sprite& pacmanSprite) 
 {
     if(allowMove){
-        if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x]) pacman.y += 1;
-        if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1]) pacman.x -= 1;
-        if(direction == 2 && mazeMatrix[pacman.y][pacman.x + 1]) pacman.x += 1;
-        if(direction == 3 && mazeMatrix[pacman.y - 1][pacman.x]) pacman.y -= 1;
+        if(direction == 0 && mazeMatrix[pacman.y + 1][pacman.x])       pacman.y += 1; 
+        else if(direction == 1 && mazeMatrix[pacman.y][pacman.x - 1])  pacman.x -= 1;
+        else if(direction == 2 && mazeMatrix[pacman.y][pacman.x + 1])  pacman.x += 1;
+        else  if(direction == 3 && mazeMatrix[pacman.y - 1][pacman.x]) pacman.y -= 1;
+
+        allowMove = false;
 
         if(pacman.x >= N-1) pacman.x = 1; 
         if(pacman.x < 1)    pacman.x = N-1;
@@ -344,7 +349,8 @@ int main()
             }
         }
         
-        if(allowButtons != false){
+        if(allowButtons != false)
+        {
             if(Keyboard::isKeyPressed(Keyboard::A) || Keyboard::isKeyPressed(Keyboard::Left))  {allowMove = true; direction = 1;}
             if(Keyboard::isKeyPressed(Keyboard::D) || Keyboard::isKeyPressed(Keyboard::Right)) {allowMove = true; direction = 2;}
             if(Keyboard::isKeyPressed(Keyboard::W) || Keyboard::isKeyPressed(Keyboard::Up))    {allowMove = true; direction = 3;}
